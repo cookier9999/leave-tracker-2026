@@ -1,0 +1,2465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team Annual Leave, TOIL & On-Call Tracker 2026 (Cloud Sync)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; padding: 1rem; background: #f5f5f7; color: #222; }
+    h1, h2, h3 { margin-top: 0; }
+    .app-container { max-width: 1300px; margin: 0 auto; }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .card-header h2, .card-header h3 { margin: 0; font-size: 1.1rem; }
+    .pill {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      white-space: nowrap;
+    }
+    form { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
+    label { display: flex; flex-direction: column; font-size: 0.8rem; gap: 0.2rem; }
+    input, select, textarea {
+      padding: 0.4rem 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      min-width: 140px;
+      font-size: 0.85rem;
+    }
+    textarea { min-width: 220px; min-height: 40px; resize: vertical; }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      background: #2563eb;
+      color: #fff;
+      white-space: nowrap;
+    }
+    button.secondary { background: #e5e7eb; color: #111827; }
+    button.danger { background: #dc2626; color: #fff; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    th, td {
+      padding: 0.45rem;
+      border-bottom: 1px solid #e5e7eb;
+      border-right: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: top;
+    }
+    th:last-child, td:last-child { border-right: none; }
+    th { background: #f3f4f6; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+    tr:nth-child(even) td { background: #fafafa; }
+    .number { text-align: right; }
+    .badge {
+      display: inline-block;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    .badge.type-annual { background: #dbeafe; color: #1d4ed8; }
+    .badge.type-toil-earned { background: #dcfce7; color: #166534; }
+    .badge.type-toil-taken { background: #fee2e2; color: #b91c1c; }
+    .badge.type-sick { background: #fee2e2; color: #b91c1c; }
+    .badge.type-bereavement { background: #fef3c7; color: #92400e; }
+    .badge.type-jury { background: #e0f2fe; color: #0369a1; }
+    .badge.type-other { background: #f3e8ff; color: #6b21a8; }
+    .badge.status-requested { background: #e0f2fe; color: #0369a1; }
+    .badge.status-approved { background: #dcfce7; color: #166534; }
+    .badge.status-rejected { background: #fee2e2; color: #b91c1c; }
+    .flex-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+    .info-text { font-size: 0.78rem; color: #4b5563; }
+    .muted { color: #9ca3af; font-size: 0.75rem; }
+    .chip { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 999px; background: #f3f4f6; font-size: 0.75rem; margin-left: 0.25rem; }
+    .highlight-positive { color: #15803d; font-weight: 600; }
+    .highlight-negative { color: #b91c1c; font-weight: 600; }
+    .calendar-table th, .calendar-table td { font-size: 0.75rem; }
+    .calendar-day-label { white-space: nowrap; }
+    .calendar-weekend { background: #fef2f2; }
+    .calendar-header-sticky { position: sticky; left: 0; background: #f3f4f6; z-index: 2; }
+    .calendar-cell { text-align: center; font-size: 0.7rem; }
+    .calendar-today {
+      outline: 2px solid #2563eb;
+      outline-offset: -2px;
+      font-weight: 600;
+    }
+    .calendar-cell.oncall-low { background: #dcfce7 !important; }
+    .calendar-cell.oncall-high { background: #fee2e2 !important; }
+
+    tfoot td { font-weight: 600; background: #e5e7eb; }
+
+    @media (max-width: 900px) {
+      table { font-size: 0.75rem; }
+      input, select, textarea { min-width: 120px; }
+      .calendar-table { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <h1>Team Annual Leave, TOIL &amp; On-Call Tracker – 2026 (Cloud Sync)</h1>
+  <p class="info-text">
+    Tracks annual leave, TOIL, sick leave, other absences and on-call payments for your team in 2026.
+    Bank holidays are <strong>extra</strong> (not deducted from allowance). Leave days are working days
+    (Mon–Fri, excluding region-specific bank holidays). You can book in <strong>days</strong>, <strong>half-days</strong>,
+    or <strong>hours</strong> (7 hours = 1 day).
+  </p>
+
+  <!-- MINI SUMMARY -->
+  <div class="card" id="mini-summary-card">
+    <div class="card-header">
+      <h2>Quick summary</h2>
+      <span class="pill">For selected month &amp; full year</span>
+    </div>
+    <p class="muted" id="mini-summary-text">
+      No data yet.
+    </p>
+  </div>
+
+  <!-- TEAM SETUP -->
+  <div class="card" id="team-card">
+    <div class="card-header">
+      <h2>Team setup</h2>
+      <span class="pill">Step 1 – add your team &amp; region</span>
+    </div>
+    <form id="team-form">
+      <label>
+        Name
+        <input type="text" id="member-name" placeholder="e.g. Jane Smith" required />
+      </label>
+      <label>
+        Annual allowance (base)
+        <input type="number" id="member-allowance-base" min="0" step="0.5" value="25" required />
+      </label>
+      <label>
+        Buy / Sell days (–3 to +3)
+        <input type="number" id="member-purchased" min="-3" max="3" step="0.5" value="0" />
+      </label>
+      <label>
+        Region (for bank holidays)
+        <select id="member-region">
+          <option value="ew">England &amp; Wales</option>
+          <option value="ni">Northern Ireland</option>
+        </select>
+      </label>
+      <button type="submit" id="team-submit-btn">Add / update team member</button>
+      <button type="button" class="secondary" id="clear-team">Clear team</button>
+    </form>
+
+    <div style="margin-top: 0.75rem;">
+      <table id="team-table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th class="number">Base AL</th>
+          <th class="number">Buy/Sell</th>
+          <th class="number">Total AL</th>
+          <th class="number">AL taken</th>
+          <th class="number">TOIL earned</th>
+          <th class="number">TOIL taken</th>
+          <th class="number">Remaining leave</th>
+          <th class="number">TOIL balance</th>
+          <th class="number">Overall balance</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p class="muted">
+        Total AL = base + buy/sell. Overall balance = remaining annual leave + TOIL balance.
+        Only <strong>approved</strong> bookings are included in these totals.
+      </p>
+    </div>
+  </div>
+
+  <!-- BOOKINGS -->
+  <div class="card" id="bookings-card">
+    <div class="card-header">
+      <h2>Bookings &amp; requests</h2>
+      <span class="pill">Step 2 – add leave / TOIL &amp; set status</span>
+    </div>
+    <form id="booking-form">
+      <label>
+        Team member
+        <select id="booking-member" required></select>
+      </label>
+      <label>
+        Type
+        <select id="booking-type" required>
+          <option value="" selected disabled>-- Select type --</option>
+          <option value="annual">Annual Leave</option>
+          <option value="toil-earned">TOIL Earned</option>
+          <option value="toil-taken">TOIL Taken</option>
+          <option value="sick">Sick Leave</option>
+          <option value="bereavement">Bereavement Leave</option>
+          <option value="jury">Jury Service</option>
+          <option value="other">Other Leave</option>
+        </select>
+      </label>
+      <label>
+        Start date
+        <input type="date" id="booking-start" required />
+      </label>
+      <label>
+        End date
+        <input type="date" id="booking-end" required />
+      </label>
+      <label>
+        Half-day? (non-hours AL only)
+        <select id="booking-halfday">
+          <option value="none">No</option>
+          <option value="start">Half-day start</option>
+          <option value="end">Half-day end</option>
+          <option value="both">Half-day start &amp; end</option>
+        </select>
+      </label>
+      <label>
+        Days (override)
+        <input type="number" id="booking-days-override" min="0.5" step="0.5" placeholder="Optional days override" />
+      </label>
+      <label>
+        Hours (Annual / TOIL, 7h = 1 day)
+        <input type="number" id="booking-hours" min="0.5" step="0.5" placeholder="e.g. 3.5, 7, 14" />
+      </label>
+      <label>
+        Status
+        <select id="booking-status">
+          <option value="approved">Approved</option>
+          <option value="requested">Requested</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </label>
+      <label>
+        Notes
+        <textarea id="booking-notes" placeholder="Optional: e.g. Spain trip, jury duty, bereavement, etc."></textarea>
+      </label>
+      <button type="submit">Add booking</button>
+      <button type="button" class="secondary" id="clear-bookings">Clear all bookings</button>
+    </form>
+
+    <p class="muted" style="margin-top:0.5rem;">
+      For <strong>Annual Leave</strong> and <strong>TOIL (earned/taken)</strong> you can either:
+      <br>• Enter <strong>hours</strong> (7 hours = 1 day), or
+      <br>• Leave hours blank and let the app calculate <strong>working days</strong> (Mon–Fri, excluding region-specific bank holidays).
+      <br>
+      For Annual Leave without hours, you can still use the <strong>half-day</strong> dropdown and/or <strong>days override</strong>.
+      For TOIL, hours are usually the clearest – days override is still available if needed.
+      Only <strong>approved</strong> bookings affect balances &amp; the calendar.
+    </p>
+
+    <div style="margin-top: 0.75rem; max-height: 360px; overflow: auto;">
+      <table id="bookings-table">
+        <thead>
+        <tr>
+          <th>Member</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Start</th>
+          <th>End</th>
+          <th class="number">Days (AL/TOIL show days &amp; hours)</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CALENDAR VIEW -->
+  <div class="card" id="calendar-card">
+    <div class="card-header">
+      <h2>Calendar – month view (who's off & on-call)</h2>
+      <span class="pill">Approved bookings + on-call</span>
+    </div>
+    <div class="flex-row" style="margin-bottom:0.5rem;">
+      <label>
+        Month (2026)
+        <select id="calendar-month">
+          <option value="0">January</option>
+          <option value="1">February</option>
+          <option value="2">March</option>
+          <option value="3">April</option>
+          <option value="4">May</option>
+          <option value="5">June</option>
+          <option value="6">July</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9">October</option>
+          <option value="10">November</option>
+          <option value="11">December</option>
+        </select>
+      </label>
+      <button type="button" class="secondary" id="calendar-prev">Previous month</button>
+      <button type="button" class="secondary" id="calendar-next">Next month</button>
+    </div>
+    <p class="muted">
+      Cells show codes for <strong>approved</strong> bookings and on-call:<br/>
+      <strong>AL</strong> = Annual Leave, <strong>TT</strong> = TOIL Taken,
+      <strong>TE</strong> = TOIL Earned, <strong>SL</strong> = Sick, <strong>BL</strong> = Bereavement,
+      <strong>JS</strong> = Jury Service, <strong>OL</strong> = Other Leave.<br/>
+      <strong>OC20</strong> = On-call (£20 Mon–Fri), <strong>OC40</strong> = On-call (£40 Sat/Sun/Bank Holiday).<br/>
+      On-call cells are colour-coded (green = £20, red = £40). Weekends are shaded and today is outlined.
+    </p>
+    <div style="overflow:auto; max-height: 420px; margin-top:0.5rem;">
+      <table id="calendar-table" class="calendar-table"></table>
+    </div>
+  </div>
+
+  <!-- MONTH SUMMARY -->
+  <div class="card" id="month-summary-card">
+    <div class="card-header">
+      <h2>Month summary – by leave type</h2>
+      <span class="pill">Approved bookings – start date in selected month</span>
+    </div>
+    <p class="muted">
+      Totals below count <strong>approved</strong> bookings whose <strong>start date</strong> falls in the selected month.
+      Values are in days (including 0.5 increments). TOIL hours are converted using 7h = 1 day.
+    </p>
+    <div style="overflow:auto; max-height: 320px;">
+      <table id="month-summary-table">
+        <thead>
+        <tr>
+          <th>Member</th>
+          <th class="number">AL</th>
+          <th class="number">TT</th>
+          <th class="number">TE</th>
+          <th class="number">SL</th>
+          <th class="number">BL</th>
+          <th class="number">JS</th>
+          <th class="number">OL</th>
+          <th class="number">Total</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ON-CALL ROTA -->
+  <div class="card" id="oncall-card">
+    <div class="card-header">
+      <h2>On-call rota &amp; payments</h2>
+      <span class="pill">Mon–Sun weeks, £20 / £40 per night</span>
+    </div>
+    <p class="muted">
+      Assign an on-call person to each week (Monday–Sunday).
+      Nights are paid at <strong>£20</strong> on normal Mon–Fri nights, <strong>£40</strong> on Saturday and Sunday nights
+      and on any bank holiday. You can override individual nights when people swap, or add standalone on-call nights using overrides only.
+    </p>
+    <form id="oncall-form">
+      <label>
+        Week starting (Monday)
+        <input type="date" id="oncall-weekstart" required />
+      </label>
+      <label>
+        On-call person
+        <select id="oncall-member" required></select>
+      </label>
+      <button type="submit">Assign on-call week</button>
+      <button type="button" class="secondary" id="clear-oncall">Clear all on-call weeks</button>
+    </form>
+
+    <div style="margin-top:0.75rem; max-height:260px; overflow:auto;">
+      <table id="oncall-weeks-table">
+        <thead>
+        <tr>
+          <th>Week</th>
+          <th>Member</th>
+          <th class="number">Nights</th>
+          <th class="number">Estimated pay (£)</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:1rem; font-size:1rem;">On-call weekly view (selected month)</h3>
+    <p class="muted">
+      Shows on-call weeks that have nights in the selected month, including weeks implied purely by overrides.
+      Footer shows <strong>total nights this month</strong> vs <strong>days in month</strong> as a coverage check.
+    </p>
+    <div style="max-height:260px; overflow:auto;">
+      <table id="oncall-month-weeks-table">
+        <thead>
+        <tr>
+          <th>Week (Mon–Sun)</th>
+          <th>Primary on-call</th>
+          <th class="number">Nights this month</th>
+          <th class="number">Overridden nights</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+      </table>
+    </div>
+
+    <h3 style="margin-top:1rem; font-size:1rem;">On-call monthly summary (selected month)</h3>
+    <p class="muted">
+      Split into <strong>Mon–Fri (£20)</strong> vs <strong>Sat/Sun/Bank Holiday (£40)</strong>, plus totals.
+      Counts all on-call nights where the <strong>night date</strong> falls in the selected month, after applying any overrides.
+    </p>
+    <div style="max-height:220px; overflow:auto;">
+      <table id="oncall-month-summary-table">
+        <thead>
+        <tr>
+          <th>Member</th>
+          <th class="number">Mon–Fri nights (£20)</th>
+          <th class="number">Pay (£)</th>
+          <th class="number">Sat/Sun/BH nights (£40)</th>
+          <th class="number">Pay (£)</th>
+          <th class="number">Total nights</th>
+          <th class="number">Total pay (£)</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:1rem; font-size:1rem;">On-call single-night overrides (swaps)</h3>
+    <p class="muted">
+      Use this to swap specific nights between team members, or create standalone on-call nights without a weekly rota.
+      These override the weekly rota for that date only.
+    </p>
+    <form id="oncall-override-form">
+      <label>
+        Date
+        <input type="date" id="oncall-override-date" required />
+      </label>
+      <label>
+        On-call person
+        <select id="oncall-override-member" required></select>
+      </label>
+      <button type="submit">Save override</button>
+      <button type="button" class="secondary" id="clear-override-by-date">Clear override for date</button>
+    </form>
+    <div style="margin-top:0.75rem; max-height:220px; overflow:auto;">
+      <table id="oncall-overrides-table">
+        <thead>
+        <tr>
+          <th>Date</th>
+          <th>Member</th>
+          <th></th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- YEAR DASHBOARD -->
+  <div class="card" id="year-dashboard-card">
+    <div class="card-header">
+      <h2>2026 year dashboard</h2>
+      <span class="pill">Approved leave &amp; on-call – full year</span>
+    </div>
+    <p class="muted">
+      One-line summary per team member for the whole of 2026. Only <strong>approved</strong> bookings and assigned on-call shifts
+      (including single-night overrides) are counted. All leave is shown in <strong>days</strong> (TOIL days are based on 7h = 1 day).
+    </p>
+    <div style="overflow:auto; max-height: 420px;">
+      <table id="year-dashboard-table">
+        <thead>
+        <tr>
+          <th>Member</th>
+          <th class="number">Allowance</th>
+          <th class="number">AL taken</th>
+          <th class="number">Remaining</th>
+          <th class="number">TOIL earned</th>
+          <th class="number">TOIL taken</th>
+          <th class="number">TOIL balance</th>
+          <th class="number">Sick</th>
+          <th class="number">Bereavement</th>
+          <th class="number">Jury</th>
+          <th class="number">Other leave</th>
+          <th class="number">On-call nights</th>
+          <th class="number">On-call pay (£)</th>
+          <th class="number">Total all leave (days)</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TOIL HOURS DASHBOARD -->
+  <div class="card" id="toil-hours-card">
+    <div class="card-header">
+      <h2>TOIL hours dashboard – 2026</h2>
+      <span class="pill">TOIL in hours (7h = 1 day)</span>
+    </div>
+    <p class="muted">
+      Pure hours view of TOIL for the whole year, converted using <strong>7 hours = 1 day</strong>.
+      This uses the same underlying bookings as the year dashboard.
+    </p>
+    <div style="overflow:auto; max-height: 320px;">
+      <table id="toil-hours-table">
+        <thead>
+        <tr>
+          <th>Member</th>
+          <th class="number">TOIL earned (hours)</th>
+          <th class="number">TOIL taken (hours)</th>
+          <th class="number">TOIL balance (hours)</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="card" id="export-card">
+    <div class="card-header">
+      <h2>Export data</h2>
+      <span class="pill">CSV &amp; JSON for HR / Finance</span>
+    </div>
+    <p class="muted">
+      Export raw data for analysis in Excel, Google Sheets or BI tools. JSON export can be used for backup.
+    </p>
+    <div class="flex-row">
+      <button type="button" class="secondary" id="export-bookings">Export bookings CSV</button>
+      <button type="button" class="secondary" id="export-oncall">Export on-call nights CSV</button>
+      <button type="button" class="secondary" id="export-year-dashboard">Export year dashboard CSV</button>
+    </div>
+
+    <div style="margin-top:0.75rem;">
+      <p class="muted">
+        JSON backup (optional): you can copy this to a safe place and paste it back later to restore.
+        Cloud sync will normally keep devices in step automatically.
+      </p>
+      <div style="display:flex; flex-direction:column; gap:0.5rem;">
+        <textarea id="state-json" placeholder="App data JSON will appear here when you export, or paste JSON here to import." style="width:100%; min-height:80px;"></textarea>
+        <div class="flex-row">
+          <button type="button" class="secondary" id="export-state-json">Export app data to JSON</button>
+          <button type="button" class="secondary" id="import-state-json">Import app data from JSON</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANK HOLIDAYS -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Bank holidays – 2026</h3>
+      <span class="pill">Used in leave &amp; on-call calculations</span>
+    </div>
+    <div>
+      <p class="info-text">
+        England &amp; Wales bank holidays apply to team members set to
+        <strong>England &amp; Wales</strong>. Northern Ireland bank holidays apply to members set to
+        <strong>Northern Ireland</strong>. On-call pay treats any UK bank holiday date as a higher-rate night.
+      </p>
+      <div style="display:flex; flex-wrap:wrap; gap:2rem;">
+        <div>
+          <strong>England &amp; Wales 2026</strong>
+          <ul class="muted" id="bh-ew-list"></ul>
+        </div>
+        <div>
+          <strong>Northern Ireland 2026</strong>
+          <ul class="muted" id="bh-ni-list"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="muted">
+    Data is stored locally in your browser and synced to a shared cloud record. All devices using the same URL
+    will converge on the same data.
+  </p>
+</div>
+
+<script>
+  // ---- CONFIG: Bank holidays 2026 ----
+  const BANK_HOLIDAYS_EW_2026 = [
+    { date: "2026-01-01", name: "New Year\u2019s Day" },
+    { date: "2026-04-03", name: "Good Friday" },
+    { date: "2026-04-06", name: "Easter Monday" },
+    { date: "2026-05-04", name: "Early May bank holiday" },
+    { date: "2026-05-25", name: "Spring bank holiday" },
+    { date: "2026-08-31", name: "Summer bank holiday" },
+    { date: "2026-12-25", name: "Christmas Day" },
+    { date: "2026-12-28", name: "Boxing Day (substitute)" }
+  ];
+
+  const BANK_HOLIDAYS_NI_2026 = [
+    { date: "2026-01-01", name: "New Year\u2019s Day" },
+    { date: "2026-03-17", name: "St Patrick\u2019s Day" },
+    { date: "2026-04-03", name: "Good Friday" },
+    { date: "2026-04-06", name: "Easter Monday" },
+    { date: "2026-05-04", name: "Early May bank holiday" },
+    { date: "2026-05-25", name: "Spring bank holiday" },
+    { date: "2026-07-13", name: "Battle of the Boyne (substitute)" },
+    { date: "2026-08-31", name: "Summer bank holiday" },
+    { date: "2026-12-25", name: "Christmas Day" },
+    { date: "2026-12-28", name: "Boxing Day (substitute)" }
+  ];
+
+  const BH_EW_SET = new Set(BANK_HOLIDAYS_EW_2026.map(bh => bh.date));
+  const BH_NI_SET = new Set(BANK_HOLIDAYS_NI_2026.map(bh => bh.date));
+  const BH_ALL_SET = new Set([...BH_EW_SET, ...BH_NI_SET]);
+
+  // ---- REMOTE SYNC CONFIG (Firebase Realtime Database) ----
+  const REMOTE_STATE_URL = "https://leave-tracker-2026-default-rtdb.europe-west1.firebasedatabase.app/leave-tracker-2026/default-team.json";
+  const REMOTE_SYNC_ENABLED = (window.location.protocol === "https:" && !!REMOTE_STATE_URL);
+
+  let remoteSaveTimer = null;
+
+  const STORAGE_KEY = "leave_tracker_2026_v6_cloud";
+  const CALENDAR_YEAR = 2026;
+  let currentCalendarMonth = 0;
+
+  const today = new Date();
+  const todayString = today.toDateString();
+
+  // Global state – always keep this object shape
+  let state = {
+    members: [],
+    bookings: [],
+    oncallWeeks: [],
+    oncallOverrides: []
+  };
+
+  let editingMemberId = null;
+
+  // ---- Remote sync helpers ----
+  function saveRemoteState() {
+    if (!REMOTE_SYNC_ENABLED || !REMOTE_STATE_URL) return;
+    fetch(REMOTE_STATE_URL, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        version: 1,
+        year: CALENDAR_YEAR,
+        state
+      })
+    }).catch(err => {
+      console.error("Remote save failed", err);
+    });
+  }
+
+  function saveRemoteStateDebounced() {
+    if (remoteSaveTimer) clearTimeout(remoteSaveTimer);
+    remoteSaveTimer = setTimeout(saveRemoteState, 1000);
+  }
+
+  async function loadRemoteState() {
+    if (!REMOTE_SYNC_ENABLED || !REMOTE_STATE_URL) return;
+    try {
+      const res = await fetch(REMOTE_STATE_URL);
+      if (!res.ok) {
+        console.warn("No remote state yet or error status:", res.status);
+        return;
+      }
+      const payload = await res.json();
+      if (!payload) return;
+
+      // Support both shapes: {state:{...}} or just {...}
+      const from = payload.state ? payload.state : payload;
+      const members = Array.isArray(from.members) ? from.members : [];
+      const bookings = Array.isArray(from.bookings) ? from.bookings : [];
+      const oncallWeeks = Array.isArray(from.oncallWeeks) ? from.oncallWeeks : [];
+      const oncallOverrides = Array.isArray(from.oncallOverrides) ? from.oncallOverrides : [];
+
+      state = { members, bookings, oncallWeeks, oncallOverrides };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (err) {
+      console.error("Failed to load remote state", err);
+    }
+  }
+
+  // ---- Utilities ----
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (REMOTE_SYNC_ENABLED) saveRemoteStateDebounced();
+  }
+
+  function loadState() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      const from = parsed && parsed.state ? parsed.state : parsed;
+      const members = Array.isArray(from.members) ? from.members : [];
+      const bookings = Array.isArray(from.bookings) ? from.bookings : [];
+      const oncallWeeks = Array.isArray(from.oncallWeeks) ? from.oncallWeeks : [];
+      const oncallOverrides = Array.isArray(from.oncallOverrides) ? from.oncallOverrides : [];
+      state = { members, bookings, oncallWeeks, oncallOverrides };
+    } catch (e) {
+      console.error("Failed to parse stored data", e);
+    }
+  }
+
+  function migrateMembersForBaseAndPurchased() {
+    const knownBase = {
+      "Alec": 25,
+      "Graham": 25,
+      "Grant": 25,
+      "Denise": 25,
+      "Richard": 25,
+      "Brett": 28
+    };
+    state.members.forEach(m => {
+      if (m.baseAllowance == null) {
+        if (knownBase[m.name]) {
+          m.baseAllowance = knownBase[m.name];
+          const total = m.allowance != null ? m.allowance : (m.baseAllowance + 3);
+          m.purchasedDays = total - m.baseAllowance;
+          m.allowance = total;
+        } else {
+          m.baseAllowance = m.allowance || 0;
+          m.purchasedDays = m.purchasedDays || 0;
+          m.allowance = m.baseAllowance + m.purchasedDays;
+        }
+      } else {
+        if (m.purchasedDays == null) m.purchasedDays = 0;
+        if (m.allowance == null) m.allowance = m.baseAllowance + m.purchasedDays;
+      }
+    });
+  }
+
+  function formatDateDisplay(iso) {
+    if (!iso) return "";
+    const d = new Date(iso + "T00:00:00");
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+  }
+
+  function formatShortRange(startIso, endIso) {
+    const s = new Date(startIso + "T00:00:00");
+    const e = new Date(endIso + "T00:00:00");
+    return `${s.toLocaleDateString("en-GB", { day:"2-digit", month:"short" })} – ${e.toLocaleDateString("en-GB", { day:"2-digit", month:"short" })}`;
+  }
+
+  function isWeekend(date) {
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  }
+
+  function isBankHoliday(date, region) {
+    const iso = date.toISOString().slice(0, 10);
+    if (region === "ni") return BH_NI_SET.has(iso);
+    return BH_EW_SET.has(iso);
+  }
+
+  function isBankHolidayAny(date) {
+    const iso = date.toISOString().slice(0, 10);
+    return BH_ALL_SET.has(iso);
+  }
+
+  function countWorkingDays(startIso, endIso, region) {
+    const start = new Date(startIso + "T00:00:00");
+    const end = new Date(endIso + "T00:00:00");
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+    if (end < start) return 0;
+
+    let count = 0;
+    const current = new Date(start);
+    while (current <= end) {
+      if (current.getFullYear() === CALENDAR_YEAR &&
+          !isWeekend(current) &&
+          !isBankHoliday(current, region)) {
+        count++;
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return count;
+  }
+
+  function generateId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  }
+
+  function typeLabelAndClass(type) {
+    switch (type) {
+      case "annual": return { label: "Annual Leave", cls: "type-annual" };
+      case "toil-earned": return { label: "TOIL Earned", cls: "type-toil-earned" };
+      case "toil-taken": return { label: "TOIL Taken", cls: "type-toil-taken" };
+      case "sick": return { label: "Sick Leave", cls: "type-sick" };
+      case "bereavement": return { label: "Bereavement Leave", cls: "type-bereavement" };
+      case "jury": return { label: "Jury Service", cls: "type-jury" };
+      default: return { label: "Other Leave", cls: "type-other" };
+    }
+  }
+
+  function statusLabelAndClass(statusRaw) {
+    const status = statusRaw || "approved";
+    switch (status) {
+      case "requested": return { label: "Requested", cls: "status-requested" };
+      case "rejected": return { label: "Rejected", cls: "status-rejected" };
+      default: return { label: "Approved", cls: "status-approved" };
+    }
+  }
+
+  function regionLabel(region) {
+    return region === "ni" ? "Northern Ireland" : "England & Wales";
+  }
+
+  function getDaysInMonth(year, monthIndex) {
+    return new Date(year, monthIndex + 1, 0).getDate();
+  }
+
+  // On-call helpers
+  function onCallNightRate(date) {
+    const isWknd = isWeekend(date);
+    const isBH = isBankHolidayAny(date);
+    return (isWknd || isBH) ? 40 : 20;
+  }
+
+  function forEachOnCallNight(callback) {
+    const map = {}; // iso -> { memberId, date, iso, rate, source }
+
+    // Weekly rota
+    state.oncallWeeks.forEach(week => {
+      const start = new Date(week.weekStart + "T00:00:00");
+      if (Number.isNaN(start.getTime())) return;
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        if (d.getFullYear() !== CALENDAR_YEAR) continue;
+
+        const iso = d.toISOString().slice(0, 10);
+        const rate = onCallNightRate(d);
+
+        map[iso] = {
+          memberId: week.memberId,
+          date: d,
+          iso,
+          rate,
+          source: "week"
+        };
+      }
+    });
+
+    // Single-night overrides
+    state.oncallOverrides.forEach(o => {
+      if (!o.date || !o.memberId) return;
+      const d = new Date(o.date + "T00:00:00");
+      if (Number.isNaN(d.getTime()) || d.getFullYear() !== CALENDAR_YEAR) return;
+
+      const iso = d.toISOString().slice(0, 10);
+      const rate = onCallNightRate(d);
+
+      map[iso] = {
+        memberId: o.memberId,
+        date: d,
+        iso,
+        rate,
+        source: "override"
+      };
+    });
+
+    Object.values(map).forEach(info => callback(info));
+  }
+
+  function buildOnCallMap() {
+    const map = {};
+    forEachOnCallNight(info => {
+      const key = info.iso + "|" + info.memberId;
+      map[key] = info.rate;
+    });
+    return map;
+  }
+
+  function computeOnCallAggregates(monthIndex) {
+    const perMember = {};
+    const totals = { lowN:0, lowPay:0, highN:0, highPay:0, nights:0, pay:0 };
+    forEachOnCallNight(info => {
+      if (typeof monthIndex === "number" && info.date.getMonth() !== monthIndex) return;
+      const rate = info.rate;
+      const isHigh = rate >= 40;
+      if (!perMember[info.memberId]) {
+        perMember[info.memberId] = { lowN:0, lowPay:0, highN:0, highPay:0, nights:0, pay:0 };
+      }
+      const agg = perMember[info.memberId];
+      if (isHigh) {
+        agg.highN += 1;
+        agg.highPay += rate;
+        totals.highN += 1;
+        totals.highPay += rate;
+      } else {
+        agg.lowN += 1;
+        agg.lowPay += rate;
+        totals.lowN += 1;
+        totals.lowPay += rate;
+      }
+      agg.nights += 1;
+      agg.pay += rate;
+      totals.nights += 1;
+      totals.pay += rate;
+    });
+    return { perMember, totals };
+  }
+
+  function calcOnCallWeekTotals(weekStartIso) {
+    const start = new Date(weekStartIso + "T00:00:00");
+    if (Number.isNaN(start.getTime())) return { nights: 0, pay: 0 };
+    let nights = 0;
+    let pay = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      if (d.getFullYear() !== CALENDAR_YEAR) continue;
+      nights++;
+      pay += onCallNightRate(d);
+    }
+    return { nights, pay };
+  }
+
+  function downloadCSV(filename, rows) {
+    const escapeCell = (cell) => {
+      if (cell === null || cell === undefined) return "";
+      const str = String(cell);
+      if (/[";,\\n]/.test(str)) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+    const csvContent = rows.map(r => r.map(escapeCell).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  // ---- Bank holiday rendering ----
+  function renderBankHolidays() {
+    const ewList = document.getElementById("bh-ew-list");
+    const niList = document.getElementById("bh-ni-list");
+    ewList.innerHTML = "";
+    niList.innerHTML = "";
+
+    BANK_HOLIDAYS_EW_2026.forEach(bh => {
+      const li = document.createElement("li");
+      li.textContent = `${formatDateDisplay(bh.date)} – ${bh.name}`;
+      ewList.appendChild(li);
+    });
+
+    BANK_HOLIDAYS_NI_2026.forEach(bh => {
+      const li = document.createElement("li");
+      li.textContent = `${formatDateDisplay(bh.date)} – ${bh.name}`;
+      niList.appendChild(li);
+    });
+  }
+
+  // ---- Seed initial members (preloaded) ----
+  function seedInitialMembersIfEmpty() {
+    if (state.members && state.members.length > 0) {
+      state.members.forEach(m => {
+        const name = (m.name || "").toLowerCase();
+        if (["alec","graham","richard"].includes(name)) m.oncall = true;
+      });
+      return;
+    }
+    const initial = [
+      { name: "Alec", allowance: 28, baseAllowance: 25, purchasedDays: 3, region: "ew", oncall: true },
+      { name: "Brett", allowance: 31, baseAllowance: 28, purchasedDays: 3, region: "ew", oncall: false },
+      { name: "Denise", allowance: 28, baseAllowance: 25, purchasedDays: 3, region: "ni", oncall: false },
+      { name: "Graham", allowance: 28, baseAllowance: 25, purchasedDays: 3, region: "ew", oncall: true },
+      { name: "Grant", allowance: 28, baseAllowance: 25, purchasedDays: 3, region: "ew", oncall: false },
+      { name: "Richard", allowance: 28, baseAllowance: 25, purchasedDays: 3, region: "ew", oncall: true }
+    ];
+    state.members = initial.map(m => ({
+      id: generateId(),
+      name: m.name,
+      allowance: m.allowance,
+      baseAllowance: m.baseAllowance,
+      purchasedDays: m.purchasedDays,
+      region: m.region,
+      oncall: m.oncall
+    }));
+    state.bookings = [];
+    state.oncallWeeks = [];
+    state.oncallOverrides = [];
+    saveState();
+  }
+
+  // ---- Team rendering ----
+  function renderTeam() {
+    const tbody = document.querySelector("#team-table tbody");
+    tbody.innerHTML = "";
+
+    const members = Array.isArray(state.members) ? state.members : [];
+    const aggregates = {};
+    members.forEach(m => {
+      aggregates[m.id] = {
+        annualTaken: 0,
+        toilEarned: 0,
+        toilTaken: 0
+      };
+    });
+
+    const bookings = Array.isArray(state.bookings) ? state.bookings : [];
+    bookings.forEach(b => {
+      const status = b.status || "approved";
+      if (status !== "approved") return;
+      const agg = aggregates[b.memberId];
+      if (!agg) return;
+      const days = b.days || 0;
+      if (b.type === "annual") agg.annualTaken += days;
+      if (b.type === "toil-earned") agg.toilEarned += days;
+      if (b.type === "toil-taken") agg.toilTaken += days;
+    });
+
+    members.forEach(member => {
+      const agg = aggregates[member.id] || { annualTaken: 0, toilEarned: 0, toilTaken: 0 };
+      const base = member.baseAllowance != null ? member.baseAllowance : (member.allowance || 0);
+      const purchased = (typeof member.purchasedDays === "number") ? member.purchasedDays : 0;
+      const total = base + purchased;
+      member.allowance = total;
+
+      const remaining = total - agg.annualTaken;
+      const toilBalance = agg.toilEarned - agg.toilTaken;
+      const overall = remaining + toilBalance;
+
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.textContent = member.name;
+      const regionSpan = document.createElement("span");
+      regionSpan.className = "chip";
+      regionSpan.textContent = regionLabel(member.region);
+      tdName.appendChild(regionSpan);
+      tr.appendChild(tdName);
+
+      const tdBase = document.createElement("td");
+      tdBase.className = "number";
+      tdBase.textContent = base.toFixed(1).replace(/\.0$/, "");
+      tr.appendChild(tdBase);
+
+      const tdPurch = document.createElement("td");
+      tdPurch.className = "number";
+      if (purchased) {
+        const val = purchased.toFixed(1).replace(/\.0$/, "");
+        tdPurch.textContent = (purchased > 0 ? "+" : "") + val;
+      } else {
+        tdPurch.textContent = "";
+      }
+      tr.appendChild(tdPurch);
+
+      const tdAllow = document.createElement("td");
+      tdAllow.className = "number";
+      tdAllow.textContent = total.toFixed(1).replace(/\.0$/, "");
+      tr.appendChild(tdAllow);
+
+      const tdAnnual = document.createElement("td");
+      tdAnnual.className = "number";
+      tdAnnual.textContent = agg.annualTaken.toFixed(1).replace(/\.0$/, "");
+      tr.appendChild(tdAnnual);
+
+      const tdToilE = document.createElement("td");
+      tdToilE.className = "number";
+      tdToilE.textContent = agg.toilEarned.toFixed(1).replace(/\.0$/, "");
+      tr.appendChild(tdToilE);
+
+      const tdToilT = document.createElement("td");
+      tdToilT.className = "number";
+      tdToilT.textContent = agg.toilTaken.toFixed(1).replace(/\.0$/, "");
+      tr.appendChild(tdToilT);
+
+      const tdRemain = document.createElement("td");
+      tdRemain.className = "number " + (remaining < 0 ? "highlight-negative" : remaining < 5 ? "highlight-negative" : "highlight-positive");
+      tdRemain.textContent = remaining.toFixed(1).replace(/\.0$/, "");
+      tr.appendChild(tdRemain);
+
+      const tdToilBal = document.createElement("td");
+      tdToilBal.className = "number " + (toilBalance < 0 ? "highlight-negative" : "highlight-positive");
+      tdToilBal.textContent = toilBalance.toFixed(1).replace(/\.0$/, "");
+      tr.appendChild(tdToilBal);
+
+      const tdOverall = document.createElement("td");
+      tdOverall.className = "number " + (overall < 0 ? "highlight-negative" : "highlight-positive");
+      tdOverall.textContent = overall.toFixed(1).replace(/\.0$/, "");
+      tr.appendChild(tdOverall);
+
+      const tdActions = document.createElement("td");
+      const btnEdit = document.createElement("button");
+      btnEdit.textContent = "Edit";
+      btnEdit.className = "secondary";
+      btnEdit.onclick = () => {
+        editingMemberId = member.id;
+        document.getElementById("member-name").value = member.name;
+        document.getElementById("member-allowance-base").value = base;
+        document.getElementById("member-purchased").value = purchased;
+        document.getElementById("member-region").value = member.region || "ew";
+        document.getElementById("team-submit-btn").textContent = "Save changes";
+      };
+      const btnDelete = document.createElement("button");
+      btnDelete.textContent = "Delete";
+      btnDelete.className = "danger";
+      btnDelete.style.marginLeft = "0.25rem";
+      btnDelete.onclick = () => {
+        if (!confirm(`Delete ${member.name} and their bookings?`)) return;
+        state.members = members.filter(m => m.id !== member.id);
+        state.bookings = bookings.filter(b => b.memberId !== member.id);
+        state.oncallWeeks = state.oncallWeeks.filter(w => w.memberId !== member.id);
+        state.oncallOverrides = state.oncallOverrides.filter(o => o.memberId !== member.id);
+        saveState();
+        renderAll();
+      };
+      tdActions.appendChild(btnEdit);
+      tdActions.appendChild(btnDelete);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+
+    const select = document.getElementById("booking-member");
+    select.innerHTML = "";
+    if (members.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Add team members first";
+      select.appendChild(opt);
+      select.disabled = true;
+    } else {
+      select.disabled = false;
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Select team member…";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      select.appendChild(placeholder);
+
+      members.forEach(member => {
+        const opt = document.createElement("option");
+        opt.value = member.id;
+        opt.textContent = member.name;
+        select.appendChild(opt);
+      });
+    }
+  }
+
+  // ---- Bookings table ----
+  function renderBookings() {
+    const tbody = document.querySelector("#bookings-table tbody");
+    tbody.innerHTML = "";
+
+    const bookings = Array.isArray(state.bookings) ? [...state.bookings] : [];
+    const sorted = bookings.sort((a, b) => (a.start < b.start ? 1 : -1));
+
+    sorted.forEach(booking => {
+      const tr = document.createElement("tr");
+
+      const member = (state.members || []).find(m => m.id === booking.memberId);
+
+      const tdMember = document.createElement("td");
+      tdMember.textContent = member ? member.name : "(deleted member)";
+      tr.appendChild(tdMember);
+
+      const tdType = document.createElement("td");
+      const info = typeLabelAndClass(booking.type);
+      const spanType = document.createElement("span");
+      spanType.className = "badge " + info.cls;
+      spanType.textContent = info.label;
+      tdType.appendChild(spanType);
+      tr.appendChild(tdType);
+
+      const tdStatus = document.createElement("td");
+      const statusInfo = statusLabelAndClass(booking.status);
+      const spanStatus = document.createElement("span");
+      spanStatus.className = "badge " + statusInfo.cls;
+      spanStatus.textContent = statusInfo.label;
+      tdStatus.appendChild(spanStatus);
+      const btnCycle = document.createElement("button");
+      btnCycle.textContent = "Change";
+      btnCycle.className = "secondary";
+      btnCycle.style.marginLeft = "0.25rem";
+      btnCycle.onclick = () => {
+        const current = booking.status || "approved";
+        let next;
+        if (current === "approved") next = "requested";
+        else if (current === "requested") next = "rejected";
+        else next = "approved";
+        booking.status = next;
+        saveState();
+        renderAll();
+      };
+      tdStatus.appendChild(btnCycle);
+      tr.appendChild(tdStatus);
+
+      const tdStart = document.createElement("td");
+      tdStart.textContent = formatDateDisplay(booking.start);
+      tr.appendChild(tdStart);
+
+      const tdEnd = document.createElement("td");
+      tdEnd.textContent = formatDateDisplay(booking.end);
+      tr.appendChild(tdEnd);
+
+      const tdDays = document.createElement("td");
+      tdDays.className = "number";
+      const daysVal = booking.days || 0;
+      let daysText = daysVal.toFixed(2).replace(/\.00$/,"").replace(/\.0$/,"");
+      if (booking.type === "toil-earned" || booking.type === "toil-taken" || booking.type === "annual") {
+        const hours = daysVal * 7;
+        const hoursRounded = Math.round(hours * 10) / 10;
+        const hoursText = hoursRounded.toString().replace(/\.0$/,"");
+        tdDays.textContent = `${daysText} (${hoursText}h)`;
+      } else {
+        tdDays.textContent = daysText;
+      }
+      tr.appendChild(tdDays);
+
+      const tdNotes = document.createElement("td");
+      tdNotes.textContent = booking.notes || "";
+      tr.appendChild(tdNotes);
+
+      const tdActions = document.createElement("td");
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "Delete";
+      btnDel.className = "danger";
+      btnDel.onclick = () => {
+        if (!confirm("Delete this booking?")) return;
+        state.bookings = bookings.filter(b => b.id !== booking.id);
+        saveState();
+        renderAll();
+      };
+      tdActions.appendChild(btnDel);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ---- Calendar ----
+  function buildCalendarCodesForDate(memberId, date) {
+    const codes = new Set();
+    (state.bookings || []).forEach(b => {
+      const status = b.status || "approved";
+      if (status !== "approved") return;
+      if (b.memberId !== memberId) return;
+      const start = new Date(b.start + "T00:00:00");
+      const end = new Date(b.end + "T00:00:00");
+      if (date < start || date > end) return;
+
+      switch (b.type) {
+        case "annual": codes.add("AL"); break;
+        case "toil-taken": codes.add("TT"); break;
+        case "toil-earned": codes.add("TE"); break;
+        case "sick": codes.add("SL"); break;
+        case "bereavement": codes.add("BL"); break;
+        case "jury": codes.add("JS"); break;
+        default: codes.add("OL"); break;
+      }
+    });
+    return Array.from(codes).join(", ");
+  }
+
+  function renderCalendar() {
+    const table = document.getElementById("calendar-table");
+    table.innerHTML = "";
+
+    const monthSelect = document.getElementById("calendar-month");
+    monthSelect.value = String(currentCalendarMonth);
+
+    const members = Array.isArray(state.members) ? state.members : [];
+    const oncallMap = buildOnCallMap();
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+
+    const thDay = document.createElement("th");
+    thDay.textContent = "Day";
+    thDay.className = "calendar-header-sticky";
+    headRow.appendChild(thDay);
+
+    members.forEach(member => {
+      const th = document.createElement("th");
+      th.textContent = member.name;
+      headRow.appendChild(th);
+    });
+
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    const daysInMonth = getDaysInMonth(CALENDAR_YEAR, currentCalendarMonth);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const row = document.createElement("tr");
+      const date = new Date(CALENDAR_YEAR, currentCalendarMonth, day);
+      const isWknd = isWeekend(date);
+      const isTodayRow = date.toDateString() === todayString && date.getFullYear() === CALENDAR_YEAR;
+      const iso = date.toISOString().slice(0,10);
+
+      const dayCell = document.createElement("td");
+      dayCell.className = "calendar-header-sticky calendar-day-label";
+      if (isWknd) dayCell.classList.add("calendar-weekend");
+      if (isTodayRow) dayCell.classList.add("calendar-today");
+      dayCell.textContent = date.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short"
+      });
+      row.appendChild(dayCell);
+
+      members.forEach(member => {
+        const cell = document.createElement("td");
+        cell.className = "calendar-cell";
+        if (isWknd) cell.classList.add("calendar-weekend");
+        if (isTodayRow) cell.classList.add("calendar-today");
+
+        const codes = buildCalendarCodesForDate(member.id, date);
+        const key = iso + "|" + member.id;
+        const rate = oncallMap[key];
+
+        if (rate) {
+          if (rate >= 40) cell.classList.add("oncall-high");
+          else cell.classList.add("oncall-low");
+        }
+
+        let text = codes;
+        if (rate) {
+          const ocCode = rate >= 40 ? "OC40" : "OC20";
+          text = text ? (text + " | " + ocCode) : ocCode;
+        }
+        cell.textContent = text;
+
+        row.appendChild(cell);
+      });
+
+      tbody.appendChild(row);
+    }
+
+    table.appendChild(tbody);
+  }
+
+  // ---- Month summary (leave types) ----
+  function renderMonthSummary() {
+    const tbody = document.querySelector("#month-summary-table tbody");
+    const tfoot = document.querySelector("#month-summary-table tfoot");
+    if (!tbody || !tfoot) return;
+
+    tbody.innerHTML = "";
+    tfoot.innerHTML = "";
+
+    const summaries = {};
+    const totals = { al:0, tt:0, te:0, sl:0, bl:0, js:0, ol:0 };
+    const bookings = Array.isArray(state.bookings) ? state.bookings : [];
+
+    bookings.forEach(b => {
+      const status = b.status || "approved";
+      if (status !== "approved") return;
+
+      const start = new Date(b.start + "T00:00:00");
+      if (start.getFullYear() !== CALENDAR_YEAR || start.getMonth() !== currentCalendarMonth) return;
+
+      const member = (state.members || []).find(m => m.id === b.memberId);
+      if (!member) return;
+
+      if (!summaries[member.id]) {
+        summaries[member.id] = {
+          name: member.name,
+          al:0, tt:0, te:0, sl:0, bl:0, js:0, ol:0
+        };
+      }
+      const entry = summaries[member.id];
+      const days = b.days || 0;
+
+      switch (b.type) {
+        case "annual": entry.al += days; totals.al += days; break;
+        case "toil-taken": entry.tt += days; totals.tt += days; break;
+        case "toil-earned": entry.te += days; totals.te += days; break;
+        case "sick": entry.sl += days; totals.sl += days; break;
+        case "bereavement": entry.bl += days; totals.bl += days; break;
+        case "jury": entry.js += days; totals.js += days; break;
+        default: entry.ol += days; totals.ol += days; break;
+      }
+    });
+
+    Object.values(summaries).forEach(entry => {
+      const tr = document.createElement("tr");
+      const totalRow = entry.al + entry.tt + entry.te + entry.sl + entry.bl + entry.js + entry.ol;
+
+      const tdName = document.createElement("td");
+      tdName.textContent = entry.name;
+      tr.appendChild(tdName);
+
+      function addNumCell(val) {
+        const td = document.createElement("td");
+        td.className = "number";
+        td.textContent = val ? val.toFixed(1).replace(/\.0$/, "") : "";
+        tr.appendChild(td);
+      }
+
+      addNumCell(entry.al);
+      addNumCell(entry.tt);
+      addNumCell(entry.te);
+      addNumCell(entry.sl);
+      addNumCell(entry.bl);
+      addNumCell(entry.js);
+      addNumCell(entry.ol);
+      addNumCell(totalRow);
+
+      tbody.appendChild(tr);
+    });
+
+    const totalTr = document.createElement("tr");
+    const labelTd = document.createElement("td");
+    labelTd.textContent = "Total";
+    totalTr.appendChild(labelTd);
+
+    function addTotalCell(val) {
+      const td = document.createElement("td");
+      td.className = "number";
+      td.textContent = val ? val.toFixed(1).replace(/\.0$/, "") : "";
+      totalTr.appendChild(td);
+    }
+
+    const grandTotal = totals.al + totals.tt + totals.te + totals.sl + totals.bl + totals.js + totals.ol;
+    addTotalCell(totals.al);
+    addTotalCell(totals.tt);
+    addTotalCell(totals.te);
+    addTotalCell(totals.sl);
+    addTotalCell(totals.bl);
+    addTotalCell(totals.js);
+    addTotalCell(totals.ol);
+    addTotalCell(grandTotal);
+
+    tfoot.appendChild(totalTr);
+  }
+
+  // ---- On-call rota & monthly summary ----
+  function renderOnCall() {
+    const select = document.getElementById("oncall-member");
+    const overrideSelect = document.getElementById("oncall-override-member");
+    select.innerHTML = "";
+    overrideSelect.innerHTML = "";
+
+    const members = Array.isArray(state.members) ? state.members : [];
+
+    if (members.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "Add team members first";
+      select.appendChild(opt);
+      select.disabled = true;
+
+      const opt2 = document.createElement("option");
+      opt2.value = "";
+      opt2.textContent = "Add team members first";
+      overrideSelect.appendChild(opt2);
+      overrideSelect.disabled = true;
+    } else {
+      select.disabled = false;
+      overrideSelect.disabled = false;
+
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Select on-call person…";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      select.appendChild(placeholder);
+
+      const placeholder2 = document.createElement("option");
+      placeholder2.value = "";
+      placeholder2.textContent = "Select on-call person…";
+      placeholder2.disabled = true;
+      placeholder2.selected = true;
+      overrideSelect.appendChild(placeholder2);
+
+      members.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m.id;
+        opt.textContent = m.name;
+        select.appendChild(opt);
+
+        const opt2 = document.createElement("option");
+        opt2.value = m.id;
+        opt2.textContent = m.name;
+        overrideSelect.appendChild(opt2);
+      });
+    }
+
+    const tbody = document.querySelector("#oncall-weeks-table tbody");
+    tbody.innerHTML = "";
+
+    const weeks = Array.isArray(state.oncallWeeks) ? state.oncallWeeks : [];
+    const sortedWeeks = [...weeks].sort((a, b) => (a.weekStart < b.weekStart ? -1 : 1));
+
+    sortedWeeks.forEach(week => {
+      const tr = document.createElement("tr");
+      const member = members.find(m => m.id === week.memberId);
+      const startIso = week.weekStart;
+      const start = new Date(startIso + "T00:00:00");
+      const end = new Date(start);
+      end.setDate(end.getDate() + 6);
+      const totals = calcOnCallWeekTotals(week.weekStart);
+
+      const tdWeek = document.createElement("td");
+      tdWeek.textContent = formatShortRange(week.weekStart, end.toISOString().slice(0,10));
+      tr.appendChild(tdWeek);
+
+      const tdMember = document.createElement("td");
+      tdMember.textContent = member ? member.name : "(deleted)";
+      tr.appendChild(tdMember);
+
+      const tdNights = document.createElement("td");
+      tdNights.className = "number";
+      tdNights.textContent = totals.nights;
+      tr.appendChild(tdNights);
+
+      const tdPay = document.createElement("td");
+      tdPay.className = "number";
+      tdPay.textContent = totals.pay.toFixed(2);
+      tr.appendChild(tdPay);
+
+      const tdActions = document.createElement("td");
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "Delete";
+      btnDel.className = "danger";
+      btnDel.onclick = () => {
+        if (!confirm("Delete this on-call week?")) return;
+        state.oncallWeeks = weeks.filter(w => w.id !== week.id);
+        saveState();
+        renderAll();
+      };
+      tdActions.appendChild(btnDel);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+
+    renderOnCallMonthSummary();
+    renderOnCallMonthWeeks();
+    renderOnCallOverrides();
+  }
+
+  function renderOnCallMonthSummary() {
+    const tbody = document.querySelector("#oncall-month-summary-table tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const { perMember } = computeOnCallAggregates(currentCalendarMonth);
+
+    const memberIndex = {};
+    (state.members || []).forEach(m => { memberIndex[m.id] = m; });
+
+    const memberIds = Object.keys(perMember);
+    if (memberIds.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 7;
+      td.className = "muted";
+      td.textContent = "No on-call shifts in this month.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    memberIds.forEach(memberId => {
+      const agg = perMember[memberId];
+      const m = memberIndex[memberId];
+      if (!m) return;
+
+      const tr = document.createElement("tr");
+      const tdName = document.createElement("td");
+      tdName.textContent = m.name;
+      tr.appendChild(tdName);
+
+      function addNumCell(val, decimals) {
+        const td = document.createElement("td");
+        td.className = "number";
+        if (val == null || val === 0) {
+          td.textContent = "";
+        } else {
+          td.textContent = (decimals ? val.toFixed(decimals) : val).toString();
+        }
+        tr.appendChild(td);
+      }
+
+      addNumCell(agg.lowN);
+      addNumCell(agg.lowPay, 2);
+      addNumCell(agg.highN);
+      addNumCell(agg.highPay, 2);
+      addNumCell(agg.nights);
+      addNumCell(agg.pay, 2);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderOnCallMonthWeeks() {
+    const table = document.getElementById("oncall-month-weeks-table");
+    if (!table) return;
+
+    const tbody = table.querySelector("tbody");
+    let tfoot = table.querySelector("tfoot");
+    if (!tfoot) {
+      tfoot = document.createElement("tfoot");
+      table.appendChild(tfoot);
+    }
+    tbody.innerHTML = "";
+    tfoot.innerHTML = "";
+
+    const memberIndex = {};
+    (state.members || []).forEach(m => { memberIndex[m.id] = m; });
+
+    const groups = {}; // weekStartIso -> { weekStartIso, nights, overrideNights, perMember: {} }
+
+    forEachOnCallNight(info => {
+      const d = info.date;
+      if (d.getMonth() !== currentCalendarMonth) return;
+
+      const monday = new Date(d);
+      const day = monday.getDay();
+      const diffToMonday = (day === 0 ? -6 : (1 - day));
+      monday.setDate(monday.getDate() + diffToMonday);
+
+      const weekStartIso = monday.toISOString().slice(0, 10);
+
+      if (!groups[weekStartIso]) {
+        groups[weekStartIso] = {
+          weekStartIso,
+          nights: 0,
+          overrideNights: 0,
+          perMember: {}
+        };
+      }
+
+      const g = groups[weekStartIso];
+      g.nights += 1;
+      if (info.source === "override") {
+        g.overrideNights += 1;
+      }
+      if (!g.perMember[info.memberId]) g.perMember[info.memberId] = 0;
+      g.perMember[info.memberId] += 1;
+    });
+
+    const groupKeys = Object.keys(groups).sort();
+    let totalNightsThisMonth = 0;
+
+    if (groupKeys.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.className = "muted";
+      td.textContent = "No on-call nights in this month.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    } else {
+      groupKeys.forEach(weekStartIso => {
+        const g = groups[weekStartIso];
+        totalNightsThisMonth += g.nights;
+
+        const start = new Date(weekStartIso + "T00:00:00");
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+
+        const weekFromWeeks = (state.oncallWeeks || []).find(w => w.weekStart === weekStartIso);
+        let primaryText = "";
+
+        if (weekFromWeeks) {
+          const m = memberIndex[weekFromWeeks.memberId];
+          primaryText = m ? m.name : "(deleted)";
+        } else {
+          const memberIds = Object.keys(g.perMember);
+          if (memberIds.length === 1) {
+            const m = memberIndex[memberIds[0]];
+            primaryText = (m ? m.name : "(deleted)") + " (override only)";
+          } else if (memberIds.length > 1) {
+            primaryText = "Overrides only (multiple)";
+          } else {
+            primaryText = "(no data)";
+          }
+        }
+
+        const tr = document.createElement("tr");
+
+        const tdWeek = document.createElement("td");
+        tdWeek.textContent = formatShortRange(
+          weekStartIso,
+          end.toISOString().slice(0,10)
+        );
+        tr.appendChild(tdWeek);
+
+        const tdMember = document.createElement("td");
+        tdMember.textContent = primaryText;
+        tr.appendChild(tdMember);
+
+        const tdNights = document.createElement("td");
+        tdNights.className = "number";
+        tdNights.textContent = g.nights;
+        tr.appendChild(tdNights);
+
+        const tdOverrides = document.createElement("td");
+        tdOverrides.className = "number";
+        tdOverrides.textContent = g.overrideNights || "";
+        tr.appendChild(tdOverrides);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    const daysInMonth = getDaysInMonth(CALENDAR_YEAR, currentCalendarMonth);
+
+    const trTotal = document.createElement("tr");
+    const tdLabelTotal = document.createElement("td");
+    tdLabelTotal.colSpan = 2;
+    tdLabelTotal.textContent = "Total nights this month";
+    trTotal.appendChild(tdLabelTotal);
+
+    const tdTotalNights = document.createElement("td");
+    tdTotalNights.className = "number";
+    tdTotalNights.textContent = totalNightsThisMonth;
+    trTotal.appendChild(tdTotalNights);
+
+    const tdBlank1 = document.createElement("td");
+    trTotal.appendChild(tdBlank1);
+    tfoot.appendChild(trTotal);
+
+    const trDays = document.createElement("tr");
+    const tdLabelDays = document.createElement("td");
+    tdLabelDays.colSpan = 2;
+    tdLabelDays.textContent = "Days in month";
+    trDays.appendChild(tdLabelDays);
+
+    const tdDays = document.createElement("td");
+    tdDays.className = "number";
+    tdDays.textContent = daysInMonth;
+    trDays.appendChild(tdDays);
+
+    const tdBlank2 = document.createElement("td");
+    trDays.appendChild(tdBlank2);
+    tfoot.appendChild(trDays);
+  }
+
+  function renderOnCallOverrides() {
+    const tbody = document.querySelector("#oncall-overrides-table tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const members = Array.isArray(state.members) ? state.members : [];
+    const memberIndex = {};
+    members.forEach(m => { memberIndex[m.id] = m; });
+
+    const overrides = Array.isArray(state.oncallOverrides) ? [...state.oncallOverrides] : [];
+    overrides.sort((a, b) => (a.date < b.date ? -1 : 1));
+
+    if (overrides.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 3;
+      td.className = "muted";
+      td.textContent = "No single-night overrides set.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    overrides.forEach(o => {
+      const tr = document.createElement("tr");
+      const tdDate = document.createElement("td");
+      tdDate.textContent = formatDateDisplay(o.date);
+      tr.appendChild(tdDate);
+
+      const tdMember = document.createElement("td");
+      tdMember.textContent = memberIndex[o.memberId] ? memberIndex[o.memberId].name : "(deleted)";
+      tr.appendChild(tdMember);
+
+      const tdActions = document.createElement("td");
+      const btnDel = document.createElement("button");
+      btnDel.textContent = "Delete";
+      btnDel.className = "danger";
+      btnDel.onclick = () => {
+        if (!confirm("Delete this override?")) return;
+        state.oncallOverrides = overrides.filter(x => x.id !== o.id);
+        saveState();
+        renderAll();
+      };
+      tdActions.appendChild(btnDel);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ---- Year dashboard ----
+  function computeYearAggregates() {
+    const aggregates = {};
+    const members = Array.isArray(state.members) ? state.members : [];
+    const bookings = Array.isArray(state.bookings) ? state.bookings : [];
+
+    members.forEach(m => {
+      aggregates[m.id] = {
+        member: m,
+        al:0, te:0, tt:0, sl:0, bl:0, js:0, ol:0,
+        ocNights:0, ocPay:0
+      };
+    });
+
+    bookings.forEach(b => {
+      const status = b.status || "approved";
+      if (status !== "approved") return;
+      const start = new Date(b.start + "T00:00:00");
+      if (start.getFullYear() !== CALENDAR_YEAR) return;
+
+      const agg = aggregates[b.memberId];
+      if (!agg) return;
+      const days = b.days || 0;
+
+      switch (b.type) {
+        case "annual": agg.al += days; break;
+        case "toil-earned": agg.te += days; break;
+        case "toil-taken": agg.tt += days; break;
+        case "sick": agg.sl += days; break;
+        case "bereavement": agg.bl += days; break;
+        case "jury": agg.js += days; break;
+        default: agg.ol += days; break;
+      }
+    });
+
+    const { perMember } = computeOnCallAggregates(null);
+    Object.keys(perMember).forEach(memberId => {
+      if (!aggregates[memberId]) return;
+      aggregates[memberId].ocNights = perMember[memberId].nights;
+      aggregates[memberId].ocPay = perMember[memberId].pay;
+    });
+
+    return aggregates;
+  }
+
+  function renderYearDashboard() {
+    const tbody = document.querySelector("#year-dashboard-table tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const aggregates = computeYearAggregates();
+
+    Object.values(aggregates).forEach(agg => {
+      const m = agg.member;
+      const base = m.baseAllowance || 0;
+      const purchased = m.purchasedDays || 0;
+      const totalAllowance = m.allowance || (base + purchased);
+      const remaining = totalAllowance - agg.al;
+      const toilBalance = agg.te - agg.tt;
+      const totalAll = agg.al + agg.te + agg.tt + agg.sl + agg.bl + agg.js + agg.ol;
+
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.textContent = m.name;
+      tr.appendChild(tdName);
+
+      function addNumCell(val) {
+        const td = document.createElement("td");
+        td.className = "number";
+        td.textContent = val ? val.toFixed(1).replace(/\.0$/, "") : "";
+        tr.appendChild(td);
+      }
+
+      addNumCell(totalAllowance);
+      addNumCell(agg.al);
+      addNumCell(remaining);
+
+      addNumCell(agg.te);
+      addNumCell(agg.tt);
+      addNumCell(toilBalance);
+
+      addNumCell(agg.sl);
+      addNumCell(agg.bl);
+      addNumCell(agg.js);
+      addNumCell(agg.ol);
+
+      const tdNights = document.createElement("td");
+      tdNights.className = "number";
+      tdNights.textContent = agg.ocNights || "";
+      tr.appendChild(tdNights);
+
+      const tdPay = document.createElement("td");
+      tdPay.className = "number";
+      tdPay.textContent = agg.ocPay ? agg.ocPay.toFixed(2) : "";
+      tr.appendChild(tdPay);
+
+      addNumCell(totalAll);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderToilHoursDashboard() {
+    const tbody = document.querySelector("#toil-hours-table tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    const aggregates = computeYearAggregates();
+
+    Object.values(aggregates).forEach(agg => {
+      const m = agg.member;
+      const earnedH = agg.te * 7;
+      const takenH = agg.tt * 7;
+      const balH = earnedH - takenH;
+
+      const tr = document.createElement("tr");
+      const tdName = document.createElement("td");
+      tdName.textContent = m.name;
+      tr.appendChild(tdName);
+
+      function addHoursCell(val) {
+        const td = document.createElement("td");
+        td.className = "number";
+        if (!val) {
+          td.textContent = "";
+        } else {
+          td.textContent = val.toFixed(1).replace(/\.0$/,"");
+        }
+        tr.appendChild(td);
+      }
+
+      addHoursCell(earnedH);
+      addHoursCell(takenH);
+      addHoursCell(balH);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ---- Mini summary (top card) ----
+  function renderMiniSummary() {
+    const el = document.getElementById("mini-summary-text");
+    if (!el) return;
+
+    const monthNames = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ];
+    const monthName = monthNames[currentCalendarMonth];
+
+    const members = Array.isArray(state.members) ? state.members : [];
+    if (members.length === 0) {
+      el.textContent = `No team members configured yet. Add your team below to start tracking ${monthName} 2026.`;
+      return;
+    }
+
+    let monthlyTotals = { al:0, tt:0, te:0, sl:0, bl:0, js:0, ol:0 };
+    const bookings = Array.isArray(state.bookings) ? state.bookings : [];
+    bookings.forEach(b => {
+      const status = b.status || "approved";
+      if (status !== "approved") return;
+      const start = new Date(b.start + "T00:00:00");
+      if (start.getFullYear() !== CALENDAR_YEAR || start.getMonth() !== currentCalendarMonth) return;
+      const days = b.days || 0;
+      switch (b.type) {
+        case "annual": monthlyTotals.al += days; break;
+        case "toil-taken": monthlyTotals.tt += days; break;
+        case "toil-earned": monthlyTotals.te += days; break;
+        case "sick": monthlyTotals.sl += days; break;
+        case "bereavement": monthlyTotals.bl += days; break;
+        case "jury": monthlyTotals.js += days; break;
+        default: monthlyTotals.ol += days; break;
+      }
+    });
+
+    const ocMonth = computeOnCallAggregates(currentCalendarMonth);
+    const ocNights = ocMonth.totals.nights;
+    const ocPay = ocMonth.totals.pay;
+
+    const aggregates = {};
+    members.forEach(m => {
+      const base = m.baseAllowance || 0;
+      const purchased = m.purchasedDays || 0;
+      const totalAllowance = m.allowance || (base + purchased);
+      aggregates[m.id] = { remaining: totalAllowance };
+    });
+    bookings.forEach(b => {
+      const status = b.status || "approved";
+      if (status !== "approved" || b.type !== "annual") return;
+      const start = new Date(b.start + "T00:00:00");
+      if (start.getFullYear() !== CALENDAR_YEAR) return;
+      const agg = aggregates[b.memberId];
+      if (!agg) return;
+      agg.remaining -= (b.days || 0);
+    });
+
+    let topName = null;
+    let topRemain = -Infinity;
+    members.forEach(m => {
+      const rem = aggregates[m.id] ? aggregates[m.id].remaining : (m.allowance || 0);
+      if (rem > topRemain) {
+        topRemain = rem;
+        topName = m.name;
+      }
+    });
+
+    const parts = [];
+    parts.push(`${monthName} 2026: AL ${monthlyTotals.al.toFixed(1).replace(/\.0$/,"")} days, TOIL taken ${monthlyTotals.tt.toFixed(1).replace(/\.0$/,"")}, TOIL earned ${monthlyTotals.te.toFixed(1).replace(/\.0$/,"")}, sick ${monthlyTotals.sl.toFixed(1).replace(/\.0$/,"")} days.`);
+    parts.push(`On-call this month: ${ocNights} night${ocNights === 1 ? "" : "s"} with estimated pay £${ocPay.toFixed(2)}.`);
+    if (topName !== null && isFinite(topRemain)) {
+      parts.push(`Most remaining annual leave: ${topName} (${topRemain.toFixed(1).replace(/\.0$/,"")} days left).`);
+    }
+
+    el.textContent = parts.join(" ");
+  }
+
+  // ---- CSV export ----
+  function exportBookingsCSV() {
+    const header = ["Member","Type","Status","Start date","End date","Days","Notes"];
+    const memberIndex = {};
+    (state.members || []).forEach(m => { memberIndex[m.id] = m.name; });
+
+    const rows = [header];
+    (state.bookings || []).forEach(b => {
+      rows.push([
+        memberIndex[b.memberId] || "(deleted)",
+        typeLabelAndClass(b.type).label,
+        (b.status || "approved"),
+        b.start,
+        b.end,
+        (b.days || 0),
+        b.notes || ""
+      ]);
+    });
+
+    downloadCSV("bookings-2026.csv", rows);
+  }
+
+  function exportOnCallCSV() {
+    const header = ["Member","Night date","Rate (£)"];
+    const rows = [header];
+    const memberIndex = {};
+    (state.members || []).forEach(m => { memberIndex[m.id] = m.name; });
+
+    forEachOnCallNight(info => {
+      rows.push([
+        memberIndex[info.memberId] || "(deleted)",
+        info.iso,
+        info.rate
+      ]);
+    });
+
+    downloadCSV("oncall-nights-2026.csv", rows);
+  }
+
+  function exportYearDashboardCSV() {
+    const header = [
+      "Member","Base allowance","Buy/Sell days","Total allowance",
+      "AL taken","Remaining",
+      "TOIL earned","TOIL taken","TOIL balance",
+      "Sick","Bereavement","Jury","Other leave",
+      "On-call nights","On-call pay","Total all leave (days)"
+    ];
+    const rows = [header];
+    const aggregates = computeYearAggregates();
+
+    Object.values(aggregates).forEach(agg => {
+      const m = agg.member;
+      const base = m.baseAllowance || 0;
+      const purchased = m.purchasedDays || 0;
+      const totalAllowance = m.allowance || (base + purchased);
+      const remaining = totalAllowance - agg.al;
+      const toilBalance = agg.te - agg.tt;
+      const totalAll = agg.al + agg.te + agg.tt + agg.sl + agg.bl + agg.js + agg.ol;
+
+      rows.push([
+        m.name,
+        base,
+        purchased,
+        totalAllowance,
+        agg.al,
+        remaining,
+        agg.te,
+        agg.tt,
+        toilBalance,
+        agg.sl,
+        agg.bl,
+        agg.js,
+        agg.ol,
+        agg.ocNights,
+        agg.ocPay.toFixed(2),
+        totalAll
+      ]);
+    });
+
+    downloadCSV("year-dashboard-2026.csv", rows);
+  }
+
+  // ---- JSON backup import/export ----
+  function setupJsonBackupHandlers() {
+    const exportStateBtn = document.getElementById("export-state-json");
+    const importStateBtn = document.getElementById("import-state-json");
+    const stateJsonBox = document.getElementById("state-json");
+
+    if (exportStateBtn && stateJsonBox) {
+      exportStateBtn.addEventListener("click", () => {
+        const payload = {
+          version: 1,
+          year: CALENDAR_YEAR,
+          state
+        };
+        stateJsonBox.value = JSON.stringify(payload, null, 2);
+        alert("App data exported to the text box. You can copy it for backup.");
+      });
+    }
+
+    if (importStateBtn && stateJsonBox) {
+      importStateBtn.addEventListener("click", () => {
+        if (!stateJsonBox.value.trim()) {
+          alert("Paste JSON into the box first.");
+          return;
+        }
+        try {
+          const payload = JSON.parse(stateJsonBox.value);
+          if (!payload || !payload.state) throw new Error("Invalid format");
+          if (payload.year && payload.year !== CALENDAR_YEAR) {
+            if (!confirm(`JSON appears to be for ${payload.year}. Import into ${CALENDAR_YEAR} anyway?`)) {
+              return;
+            }
+          }
+          const from = payload.state;
+          const members = Array.isArray(from.members) ? from.members : [];
+          const bookings = Array.isArray(from.bookings) ? from.bookings : [];
+          const oncallWeeks = Array.isArray(from.oncallWeeks) ? from.oncallWeeks : [];
+          const oncallOverrides = Array.isArray(from.oncallOverrides) ? from.oncallOverrides : [];
+          state = { members, bookings, oncallWeeks, oncallOverrides };
+          saveState();
+          renderAll();
+          alert("App data imported successfully.");
+        } catch (err) {
+          console.error(err);
+          alert("Could not parse JSON. Check that you pasted it correctly.");
+        }
+      });
+    }
+  }
+
+  // ---- Render all ----
+  function renderAll() {
+    renderTeam();
+    renderBookings();
+    renderCalendar();
+    renderMonthSummary();
+    renderOnCall();
+    renderYearDashboard();
+    renderToilHoursDashboard();
+    renderBankHolidays();
+    renderMiniSummary();
+  }
+
+  // ---- Event handlers ----
+  function setupEventHandlers() {
+    const teamForm = document.getElementById("team-form");
+    teamForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("member-name").value.trim();
+      const baseVal = parseFloat(document.getElementById("member-allowance-base").value);
+      let purchasedVal = parseFloat(document.getElementById("member-purchased").value);
+      if (Number.isNaN(purchasedVal)) purchasedVal = 0;
+      if (purchasedVal < -3) purchasedVal = -3;
+      if (purchasedVal > 3) purchasedVal = 3;
+
+      const region = document.getElementById("member-region").value || "ew";
+      if (!name || Number.isNaN(baseVal)) return;
+
+      const total = baseVal + purchasedVal;
+
+      let member = null;
+      if (editingMemberId) {
+        member = (state.members || []).find(m => m.id === editingMemberId);
+      }
+      if (member) {
+        member.name = name;
+        member.baseAllowance = baseVal;
+        member.purchasedDays = purchasedVal;
+        member.allowance = total;
+        member.region = region;
+      } else {
+        member = {
+          id: generateId(),
+          name,
+          baseAllowance: baseVal,
+          purchasedDays: purchasedVal,
+          allowance: total,
+          region,
+          oncall: ["alec","graham","richard"].includes(name.toLowerCase())
+        };
+        if (!Array.isArray(state.members)) state.members = [];
+        state.members.push(member);
+      }
+
+      editingMemberId = null;
+      document.getElementById("team-submit-btn").textContent = "Add / update team member";
+      document.getElementById("member-name").value = "";
+      document.getElementById("member-allowance-base").value = "25";
+      document.getElementById("member-purchased").value = "0";
+      document.getElementById("member-region").value = "ew";
+      saveState();
+      renderAll();
+    });
+
+    document.getElementById("clear-team").addEventListener("click", () => {
+      if (!confirm("Clear all team members and their bookings & on-call weeks?")) return;
+      state.members = [];
+      state.bookings = [];
+      state.oncallWeeks = [];
+      state.oncallOverrides = [];
+      saveState();
+      renderAll();
+    });
+
+    const bookingForm = document.getElementById("booking-form");
+    bookingForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const memberId = document.getElementById("booking-member").value;
+      const type = document.getElementById("booking-type").value;
+      const start = document.getElementById("booking-start").value;
+      const end = document.getElementById("booking-end").value;
+      const halfday = document.getElementById("booking-halfday").value;
+      const status = document.getElementById("booking-status").value;
+      const notes = document.getElementById("booking-notes").value.trim();
+      const overrideRaw = document.getElementById("booking-days-override").value;
+      const hoursRaw = document.getElementById("booking-hours").value;
+
+      if (!memberId || !type || !start || !end) return;
+
+      const member = (state.members || []).find(m => m.id === memberId);
+      if (!member) {
+        alert("Member not found. Please re-add them.");
+        return;
+      }
+
+      let days = 0;
+
+      if (type === "toil-earned" || type === "toil-taken" || type === "annual") {
+        const hoursVal = parseFloat(hoursRaw);
+        if (!Number.isNaN(hoursVal) && hoursVal > 0) {
+          days = hoursVal / 7;
+        } else {
+          days = countWorkingDays(start, end, member.region || "ew");
+          if (days <= 0) {
+            alert("No working days found in this range (check dates / weekends / bank holidays).");
+            return;
+          }
+          if (type === "annual") {
+            if (halfday === "start" || halfday === "end") {
+              days -= 0.5;
+            } else if (halfday === "both") {
+              days -= 1.0;
+            }
+          }
+        }
+
+        let overrideVal = parseFloat(overrideRaw);
+        if (!Number.isNaN(overrideVal) && overrideVal > 0) {
+          days = overrideVal;
+        }
+      } else {
+        days = countWorkingDays(start, end, member.region || "ew");
+        if (days <= 0) {
+          alert("No working days found in this range (check dates / weekends / bank holidays).");
+          return;
+        }
+        if (halfday === "start" || halfday === "end") {
+          days -= 0.5;
+        } else if (halfday === "both") {
+          days -= 1.0;
+        }
+        let overrideVal = parseFloat(overrideRaw);
+        if (!Number.isNaN(overrideVal) && overrideVal > 0) {
+          days = overrideVal;
+        }
+      }
+
+      if (days <= 0) {
+        alert("Calculated/override days are zero or negative.");
+        return;
+      }
+
+      const booking = {
+        id: generateId(),
+        memberId,
+        type,
+        start,
+        end,
+        days,
+        halfday,
+        notes,
+        status
+      };
+
+      if (!Array.isArray(state.bookings)) state.bookings = [];
+      state.bookings.push(booking);
+      saveState();
+      bookingForm.reset();
+      document.getElementById("booking-halfday").value = "none";
+      document.getElementById("booking-status").value = "approved";
+      renderAll();
+    });
+
+    document.getElementById("clear-bookings").addEventListener("click", () => {
+      if (!confirm("Clear all bookings (team members and on-call weeks will remain)?")) return;
+      state.bookings = [];
+      saveState();
+      renderAll();
+    });
+
+    const monthSelect = document.getElementById("calendar-month");
+    monthSelect.addEventListener("change", () => {
+      currentCalendarMonth = parseInt(monthSelect.value, 10) || 0;
+      renderCalendar();
+      renderMonthSummary();
+      renderOnCallMonthSummary();
+      renderOnCallMonthWeeks();
+      renderMiniSummary();
+    });
+
+    document.getElementById("calendar-prev").addEventListener("click", () => {
+      currentCalendarMonth = (currentCalendarMonth + 11) % 12;
+      document.getElementById("calendar-month").value = String(currentCalendarMonth);
+      renderCalendar();
+      renderMonthSummary();
+      renderOnCallMonthSummary();
+      renderOnCallMonthWeeks();
+      renderMiniSummary();
+    });
+
+    document.getElementById("calendar-next").addEventListener("click", () => {
+      currentCalendarMonth = (currentCalendarMonth + 1) % 12;
+      document.getElementById("calendar-month").value = String(currentCalendarMonth);
+      renderCalendar();
+      renderMonthSummary();
+      renderOnCallMonthSummary();
+      renderOnCallMonthWeeks();
+      renderMiniSummary();
+    });
+
+    const oncallForm = document.getElementById("oncall-form");
+    oncallForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const weekStart = document.getElementById("oncall-weekstart").value;
+      const memberId = document.getElementById("oncall-member").value;
+      if (!weekStart || !memberId) return;
+
+      const d = new Date(weekStart + "T00:00:00");
+      if (Number.isNaN(d.getTime())) {
+        alert("Invalid week starting date.");
+        return;
+      }
+      if (d.getFullYear() !== CALENDAR_YEAR) {
+        alert("On-call weeks must start in 2026.");
+        return;
+      }
+
+      if (!Array.isArray(state.oncallWeeks)) state.oncallWeeks = [];
+      const existingIdx = state.oncallWeeks.findIndex(w => w.weekStart === weekStart);
+      if (existingIdx >= 0) {
+        state.oncallWeeks[existingIdx].memberId = memberId;
+      } else {
+        state.oncallWeeks.push({
+          id: generateId(),
+          memberId,
+          weekStart
+        });
+      }
+      saveState();
+      oncallForm.reset();
+      renderAll();
+    });
+
+    document.getElementById("clear-oncall").addEventListener("click", () => {
+      if (!confirm("Clear all on-call weeks? (single-night overrides will remain)")) return;
+      state.oncallWeeks = [];
+      saveState();
+      renderAll();
+    });
+
+    const overrideForm = document.getElementById("oncall-override-form");
+    overrideForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const date = document.getElementById("oncall-override-date").value;
+      const memberId = document.getElementById("oncall-override-member").value;
+      if (!date || !memberId) return;
+
+      const d = new Date(date + "T00:00:00");
+      if (Number.isNaN(d.getTime()) || d.getFullYear() !== CALENDAR_YEAR) {
+        alert("Overrides must be in 2026.");
+        return;
+      }
+
+      if (!Array.isArray(state.oncallOverrides)) state.oncallOverrides = [];
+      const existingIdx = state.oncallOverrides.findIndex(o => o.date === date);
+      if (existingIdx >= 0) {
+        state.oncallOverrides[existingIdx].memberId = memberId;
+      } else {
+        state.oncallOverrides.push({
+          id: generateId(),
+          date,
+          memberId
+        });
+      }
+      saveState();
+      overrideForm.reset();
+      renderAll();
+    });
+
+    document.getElementById("clear-override-by-date").addEventListener("click", () => {
+      const date = document.getElementById("oncall-override-date").value;
+      if (!date) return;
+      if (!Array.isArray(state.oncallOverrides)) state.oncallOverrides = [];
+      state.oncallOverrides = state.oncallOverrides.filter(o => o.date !== date);
+      saveState();
+      renderAll();
+    });
+
+    document.getElementById("export-bookings").addEventListener("click", exportBookingsCSV);
+    document.getElementById("export-oncall").addEventListener("click", exportOnCallCSV);
+    document.getElementById("export-year-dashboard").addEventListener("click", exportYearDashboardCSV);
+
+    setupJsonBackupHandlers();
+  }
+
+  // ---- Init ----
+  loadState();
+  seedInitialMembersIfEmpty();
+  migrateMembersForBaseAndPurchased();
+  const now = new Date();
+  if (now.getFullYear() === CALENDAR_YEAR) {
+    currentCalendarMonth = now.getMonth();
+  } else {
+    currentCalendarMonth = 0;
+  }
+  setupEventHandlers();
+  renderAll(); // local first
+
+  // Then pull latest from the cloud and refresh
+  loadRemoteState().then(() => {
+    renderAll();
+  });
+</script>
+</body>
+</html>
